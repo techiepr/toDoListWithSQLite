@@ -1,0 +1,73 @@
+import sqlite3
+
+# Connect to the SQLite database
+conn = sqlite3.connect('todo.db')
+cursor = conn.cursor()
+
+# Function to add a task to the database
+def add_task():
+    task = input("Enter a new task: ")
+    cursor.execute(''' CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY,
+        task TEXT NOT NULL)''')
+    conn.commit()
+    print("Task added successfully!")
+
+# Function to delete a task from the database
+def delete_task():
+    if not tasks_exist():
+        print("The task list is empty.")
+        return
+
+    display_tasks()
+    try:
+        task_id = int(input("Enter the task ID to delete: "))
+        cursor.execute('DELETE FROM tasks WHERE id = ?', (task_id,))
+        conn.commit()
+        print(f"Task with ID {task_id} has been deleted.")
+    except ValueError:
+        print("Invalid input. Please enter a valid task ID.")
+
+# Function to check if there are tasks in the database
+def tasks_exist():
+    cursor.execute('SELECT COUNT(*) FROM tasks')
+    count = cursor.fetchone()[0]
+    return count > 0
+
+# Function to display tasks
+def display_tasks():
+    if not tasks_exist():
+        print("The task list is empty.")
+    else:
+        cursor.execute('SELECT id, task FROM tasks')
+        tasks = cursor.fetchall()
+        print("Tasks:")
+        for task_id, task_description in tasks:
+            print(f"{task_id}. {task_description}")
+
+# Close the database connection when done
+def close_db_connection():
+    conn.close()
+
+# Main loop
+while True:
+    print("\nTo-Do List Menu:")
+    print("1. Add Task")
+    print("2. Delete Task")
+    print("3. Display Tasks")
+    print("4. Quit")
+
+    choice = input("Enter your choice (1/2/3/4): ")
+
+    if choice == "1":
+        add_task()
+    elif choice == "2":
+        delete_task()
+    elif choice == "3":
+        display_tasks()
+    elif choice == "4":
+        print("Goodbye!")
+        close_db_connection()  # Close the database connection before quitting
+        break
+    else:
+        print("Invalid choice. Please select a valid option.")
